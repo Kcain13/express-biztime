@@ -45,14 +45,24 @@ router.get("/:code", async function (req, res, next) {
             [code]
         );
 
+        const industryResult = await db.query(
+            `SELECT i.code, i.industry
+             FROM industries AS i
+             INNER JOIN company_industry AS ci on i.code = ci.industry_code
+             WHERE ci.company_code = $1`,
+            [code]
+        );
+
         if (compResult.rows.length === 0) {
             throw new ExpressError(`No such company: ${code}`, 404)
         }
 
         const company = compResult.rows[0];
         const invoices = invResult.rows;
+        const industries = industryResult.rows;
 
         company.invoices = invoices.map(inv => inv.id);
+        company.industries = industries;
 
         return res.json({ "company": company });
     }
